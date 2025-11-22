@@ -60,7 +60,17 @@ fail_count=0
 
 echo "Running $total_tests terraform module tests from $TEST_CASES_FILE in $TEST_DIR"
 
-while IFS= read -r case_json; do
+cases_tmp="$(mktemp -t tf-test-cases.XXXXXX)"
+if ! jq -c '.[]' "$TEST_CASES_FILE" >"$cases_tmp" 2>/dev/null; then
+	echo "Error: failed to parse test cases file $TEST_CASES_FILE" >&2
+	echo "--- test-cases.json ---" >&2
+	sed -n '1,200p' "$TEST_CASES_FILE" >&2 || true
+	echo "--- end test-cases.json ---" >&2
+	rm -f "$cases_tmp"
+	exit 5
+fi
+
+while IFS= read -r case_json || [[ -n "$case_json" ]]; do
 	test_id=$(jq -r '.id // "unnamed"' <<<"$case_json")
 	org=$(jq -r '.organization // empty' <<<"$case_json")
 	env=$(jq -r '.environment // empty' <<<"$case_json")
