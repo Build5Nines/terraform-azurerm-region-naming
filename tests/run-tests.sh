@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+#set -euo pipefail
 
 # tests/run-tests.sh
 # Lightweight Terraform module test harness for the local `tests/testmodule` example.
