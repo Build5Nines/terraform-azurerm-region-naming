@@ -10,36 +10,36 @@
 # #######################################################
 
 output "base_suffix" {
-    description = "The base prefix for Azure resource names based on the organization and environment."
-    value       = local.name_suffix
+  description = "The base prefix for Azure resource names based on the organization and environment."
+  value       = local.name_suffix
 }
 
 output "prefix" {
-    description = "The full prefix for Azure resource names including location abbreviation."
-    value       = module.azure_name_prefix.prefix
+  description = "The full prefix for Azure resource names including location abbreviation."
+  value       = module.azure_name_prefix.prefix
 }
 
 output "organization" {
-    description = "The organization name part used in the naming convention."
-    value       = var.organization
+  description = "The organization name part used in the naming convention."
+  value       = var.organization
 }
 
 output "environment" {
-    description = "The environment name part used in the naming convention."
-    value       = var.environment
+  description = "The environment name part used in the naming convention."
+  value       = var.environment
 }
 
 output "location" {
-    description = "The Azure Region used in the naming convention."
-    value       = var.location
+  description = "The Azure Region used in the naming convention."
+  value       = var.location
 }
 
 output "location_abbreviation" {
-    description = "The abbreviation for the specified Azure region."
-    value       = try(local.location_abbr[var.location], try(local.location_abbr[local.location_canonical], local.location_canonical))
+  description = "The abbreviation for the specified Azure region."
+  value       = try(local.location_abbr[var.location], try(local.location_abbr[local.location_canonical], local.location_canonical))
 }
 
 output "location_secondary" {
-    description = "The standardized Azure region name for the specified location."
-    value       = try(local.azure_region_pair[var.location], local.azure_region_pair[local.location_canonical])
+  description = "The standardized Azure region name for the specified location."
+  value       = try(local.azure_region_pair[var.location], local.azure_region_pair[local.location_canonical])
 }
