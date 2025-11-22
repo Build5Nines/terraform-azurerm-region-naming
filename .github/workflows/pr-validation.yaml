@@ -2,6 +2,12 @@ name: PR Validation
 
 on: [push, pull_request, workflow_dispatch]
 
+env:
+  ACTIONS_RUNNER_DEBUG: 'true'
+  ACTIONS_STEP_DEBUG: 'true'
+  TF_LOG: 'DEBUG'
+  TF_LOG_PATH: '${{ runner.temp }}/terraform-debug.log'
+
 jobs:
   build:
     name: TF Validate
@@ -48,3 +54,16 @@ jobs:
       - name: Run unit tests
         working-directory: ./tests
         run: ./run-tests.sh
+
+      - name: Print Terraform debug log (on failure)
+        if: failure()
+        run: |
+          echo "TF_LOG_PATH=${TF_LOG_PATH:-$RUNNER_TEMP/terraform-debug.log}"
+          LOG_PATH="${TF_LOG_PATH:-$RUNNER_TEMP/terraform-debug.log}"
+          if [ -f "$LOG_PATH" ]; then
+            echo "---- terraform debug log start ----"
+            sed -n '1,2000p' "$LOG_PATH" || true
+            echo "---- terraform debug log end ----"
+          else
+            echo "No terraform debug log found at $LOG_PATH"
+          fi
