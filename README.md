@@ -1,6 +1,6 @@
 # Azure Region Naming Terraform Module from Build5Nines
 
-[![TF Validation](https://github.com/Build5Nines/terraform-azurerm-region-naming/actions/workflows/unit-tests.yaml/badge.svg)](https://github.com/Build5Nines/terraform-azurerm-region-naming/actions/workflows/unit-tests.yaml)
+[![Unit Tests](https://github.com/Build5Nines/terraform-azurerm-region-naming/actions/workflows/unit-tests.yaml/badge.svg)](https://github.com/Build5Nines/terraform-azurerm-region-naming/actions/workflows/unit-tests.yaml)
 
 Naming Microsoft Azure resources provisioned across multiple Azure Regions and Environment deployments is easier and more consistent with this Terraform module. It helps you:
 
