@@ -1,16 +1,5 @@
 [
   {
-    "id": "broken-test",
-    "organization": "acme",
-    "environment": "prd",
-    "location": "East US",
-    "expected": {
-      "location_abbreviation": "eust",
-      "prefix_resource_group_name": "rg-acme-eus-prdt",
-      "location_secondary": "westust"
-    }
-  },
-  {
     "id": "basic-eastus",
     "organization": "acme",
     "environment": "prd",
