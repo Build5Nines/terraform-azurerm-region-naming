@@ -42,6 +42,11 @@ run "basic-eastus" {
     condition     = output.location_secondary == "westus"
     error_message = "location_secondary did not match expected"
   }
+
+  assert {
+    condition = output.organization == "acme"
+    error_message = "organization did not match expected"
+  }
 }
 
 // Canonical eastus (short) test
