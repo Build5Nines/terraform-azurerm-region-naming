@@ -10,7 +10,7 @@ This Terraform module standardizes Azure resource names by composing an opiniona
 * Region abbreviation (canonical + overridable)
 * Environment
 
-It then passes that suffix to the upstream Azure naming module so you can access every supported Azure resource name through a single exported `prefix` object.
+It then passes that suffix to the upstream Azure naming module so you can access every supported Azure resource name through a single exported `resources` object.
 
 ---
 ## Highlights
@@ -44,7 +44,7 @@ rg-b59-eus-prod
 ```
 (`rg` is applied internally by the upstream module as the slug for a resource group.)
 
-This naming pattern enables the use of this module to more easily adhere to a defined Azure resource naming convention for multiple Azure resources. Here's an example of using this to set the _prefix_ of the Azure resource names, while naming them according to the specific workload:
+This naming pattern enables the use of this module to more easily adhere to a defined Azure resource naming convention for multiple Azure resources. Here's an example of using this to set the _prefix_ of the Azure resource names using the defined naming convention while also naming them according to the specific workload and using the correct Azure resource abbreviation:
 
 ```hcl
 
@@ -75,7 +75,7 @@ SQL Server      = sql-b59-eus-prod-data
 ---
 ## Accessing Resource Names
 
-The `prefix` output is an entire instantiated module object from `Azure/naming/azurerm`, not just a string. This means that the `prefix` output has properties for each [Azure Resource type](https://github.com/Azure/terraform-azurerm-naming/blob/master/README.md#outputs). Each resource (e.g. `.resources.app_service`) is an object with additional properties for that Azure Resource type:
+The `resources` output is an entire instantiated module object from `Azure/naming/azurerm`, not just a string. This means that the `resources` output has properties for each [Azure Resource type](https://github.com/Azure/terraform-azurerm-naming/blob/master/README.md#outputs). Each resource (e.g. `.resources.app_service`) is an object with additional properties for that Azure Resource type:
 
 | Property       | Description |
 |----------------|-------------|
@@ -200,7 +200,7 @@ By default, the module will lookup the Microsoft Region Pair to return for the `
 | Name | Description |
 |------|-------------|
 | `base_suffix` | Final joined suffix string (e.g. `b59-eus-prod`). |
-| `prefix` | The full upstream Azure naming module instance (access resource names via `prefix.<resource>.name`). |
+| `resoruces` | The full upstream Azure naming module instance (access resource names via `resources.<resource>.name`). |
 | `organization` | Echo of `var.organization`. |
 | `environment` | Echo of `var.environment`. |
 | `location` | Original provided location input. |
@@ -223,7 +223,7 @@ locals {
 * Suffix expansion: Each element of `var.name_suffix` has tokens replaced; result list joined into a single string by the upstream module when composing names.
 * Upstream module call:
     ```hcl
-    module "azure_name_prefix" {
+    module "azure_naming" {
         source = "Azure/naming/azurerm"
         suffix = local.name_suffix
     }
@@ -304,15 +304,16 @@ resource "azurerm_resource_group" "secondary" {
 
 ---
 ## FAQ
+
 **Q: Why an array (`name_suffix`) instead of a single template string?**  
 Allows easier reordering and alignment with upstream module expectations (`suffix` accepts list).  
+
 **Q: Can I add a workload slug?**  
 Yes—append a literal: `["{org}", "{loc}", "{env}", "api"]`.  
-**Q: Is `prefix` really a string?**  
-No—it's the entire upstream naming module instance; treat it like `module.<name>.<resource>.name`.
 
 ---
 ## Future Ideas
+
 * Optional inclusion of sovereign clouds via separate data file.
 * Automatic region list refresh script.
 * Toggle for including subscription / tenant contextual slugs.
