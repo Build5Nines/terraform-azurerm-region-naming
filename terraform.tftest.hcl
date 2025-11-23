@@ -159,3 +159,114 @@ run "no-environment-01" {
     error_message = "location_secondary did not match expected"
   }
 }
+
+// Custom Location Abbreviation
+run "custom-location-abbreviation-01" {
+  command = plan
+
+  variables {
+    organization = "acme"
+    environment  = "prd"
+    location     = "East US"
+    location_abbreviations = {
+      "East US" = "east"
+    }
+  }
+
+  assert {
+    condition     = output.location_abbreviation == "east"
+    error_message = "location_abbreviation did not match expected"
+  }
+
+  assert {
+    condition     = output.prefix.resource_group.name == "rg-acme-east-prd"
+    error_message = "prefix_resource_group_name did not match expected"
+  }
+
+  assert {
+    condition     = output.location_secondary == "westus"
+    error_message = "location_secondary did not match expected"
+  }
+}
+
+run "custom-location-abbreviation-02" {
+  command = plan
+
+  variables {
+    organization = "acme"
+    environment  = "prd"
+    location     = "East US"
+    location_abbreviations = {
+      "eastus" = "east"
+    }
+  }
+
+  assert {
+    condition     = output.location_abbreviation == "east"
+    error_message = "location_abbreviation did not match expected"
+  }
+
+  assert {
+    condition     = output.prefix.resource_group.name == "rg-acme-east-prd"
+    error_message = "prefix_resource_group_name did not match expected"
+  }
+
+  assert {
+    condition     = output.location_secondary == "westus"
+    error_message = "location_secondary did not match expected"
+  }
+}
+
+run "custom-location-abbreviation-03" {
+  command = plan
+
+  variables {
+    organization = "acme"
+    environment  = "prd"
+    location     = "eastus"
+    location_abbreviations = {
+      "East US" = "east"
+    }
+  }
+
+  assert {
+    condition     = output.location_abbreviation == "east"
+    error_message = "location_abbreviation did not match expected"
+  }
+
+  assert {
+    condition     = output.prefix.resource_group.name == "rg-acme-east-prd"
+    error_message = "prefix_resource_group_name did not match expected"
+  }
+
+  assert {
+    condition     = output.location_secondary == "westus"
+    error_message = "location_secondary did not match expected"
+  }
+}
+
+run "custom-secondary-location" {
+  command = plan
+
+  variables {
+    organization       = "acme"
+    environment        = "prd"
+    location           = "East US"
+    location_secondary = "North Central US"
+  }
+
+  assert {
+    condition     = output.location_abbreviation == "eus"
+    error_message = "location_abbreviation did not match expected"
+  }
+
+  assert {
+    condition     = output.prefix.resource_group.name == "rg-acme-eus-prd"
+    error_message = "prefix_resource_group_name did not match expected"
+  }
+
+  assert {
+    condition     = output.location_secondary == "North Central US"
+    error_message = "location_secondary did not match expected"
+  }
+}

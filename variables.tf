@@ -153,6 +153,12 @@ variable "location" {
   }
 }
 
+variable "location_secondary" {
+  description = "Optional override for the secondary Azure Region to use. When provided (non-empty), this value will be exposed by the `location_secondary` output instead of the computed Microsoft regional pair."
+  type        = string
+  default     = ""
+}
+
 variable "name_suffix" {
   description = "The pattern to use for the name suffix in Azure resource names. This can include placeholders for organization, environment, and location."
   type        = list(string)

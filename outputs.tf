@@ -41,5 +41,5 @@ output "location_abbreviation" {
 
 output "location_secondary" {
   description = "The standardized Azure region name for the specified location."
-  value       = try(local.azure_region_pair[var.location], local.azure_region_pair[local.location_canonical])
+  value       = length(trimspace(var.location_secondary)) > 0 ? var.location_secondary : try(local.azure_region_pair[var.location], local.azure_region_pair[local.location_canonical])
 }

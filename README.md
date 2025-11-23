@@ -27,7 +27,7 @@ It then passes that suffix to the upstream Azure naming module so you can access
 ```hcl
 module "naming_primary" {
     source        = "github.com/Build5Nines/terraform-azure-naming"
-    organization  = "contoso"
+    organization  = "b59"
     environment   = "prod"
     location      = "East US"   # or "eastus"
 }
@@ -40,7 +40,7 @@ resource "azurerm_resource_group" "main" {
 
 Resulting resource group name pattern (example):
 ```
-contoso-eus-prod-rg
+b59-eus-prod-rg
 ```
 (`rg` is applied internally by the upstream module as the slug for a resource group.)
 
@@ -94,7 +94,6 @@ module "naming_secondary" {
     environment  = module.naming_primary.environment
     location     = module.naming_primary.location_secondary
 }
-```
 
 ---
 ## Customizing the Suffix Pattern
@@ -108,18 +107,20 @@ You can rearrange or add static parts:
 ```hcl
 module "naming_primary" {
     source        = "github.com/Build5Nines/terraform-azure-naming"
-    organization  = "contoso"
+    organization  = "b59"
     environment   = "dev"
     location      = "westeurope"
-    name_suffix   = ["{org}", "{env}", "{loc}"] # contoso-dev-weu
+    name_suffix   = ["{org}", "{env}", "{loc}"] # b59-dev-weu
 }
 ```
+
+## Customizing the Azure Region / Location Abbreviations
 
 Override region abbreviations:
 ```hcl
 module "naming_primary" {
     source        = "github.com/Build5Nines/terraform-azure-naming"
-    organization  = "contoso"
+    organization  = "b59"
     environment   = "prod"
     location      = "East US"
     location_abbreviations = {
@@ -128,6 +129,24 @@ module "naming_primary" {
     }
 }
 ```
+
+## Customizing the Secondary Location / Azure Region Pair
+
+Override the secondary location by setting a custom secondary region on the primary module:
+
+```hcl
+module "naming_primary" {
+    source              = "github.com/Build5Nines/terraform-azure-naming"
+    organization        = "b59"
+    environment         = "prod"
+    location            = "East US"
+    location_secondary  = "North Central US  # or "northcentralus"
+}
+
+# Now module.naming_primary.location_secondary == "North Central US"
+```
+
+By default, the module will lookup the Microsoft Region Pair to return for the `location_secondary` output from the module. By setting the `location_secondary` explicitly, you can override this behavior by setting the secondary location needed for your own disaster recovery plans.
 
 ---
 ## Inputs
@@ -139,6 +158,7 @@ module "naming_primary" {
 | `location` | Azure region (display or programmatic). | string | n/a | yes |
 | `name_suffix` | Ordered list of pattern tokens / literals forming the suffix. Tokens: `{org}`, `{loc}`, `{env}`. | list(string) | `["{org}", "{loc}", "{env}"]` | no |
 | `location_abbreviations` | Map of region -> abbreviation overrides (display or programmatic keys). | map(string) | `{}` | no |
+| `location_secondary` | Optional override for the secondary region. When set (non-empty), the `location_secondary` output will equal this value instead of the computed Microsoft regional pair. | string | "" | no |
 
 `organization` / `environment` default to empty strings; supplying them is strongly recommended for meaningful names.
 
@@ -147,13 +167,13 @@ module "naming_primary" {
 
 | Name | Description |
 |------|-------------|
-| `base_suffix` | Final joined suffix string (e.g. `contoso-eus-prod`). |
+| `base_suffix` | Final joined suffix string (e.g. `b59-eus-prod`). |
 | `prefix` | The full upstream Azure naming module instance (access resource names via `prefix.<resource>.name`). |
 | `organization` | Echo of `var.organization`. |
 | `environment` | Echo of `var.environment`. |
 | `location` | Original provided location input. |
 | `location_abbreviation` | Resolved abbreviation (override > JSON > canonical short name). |
-| `location_secondary` | Paired/canonicalized region from `region_pair.json` (use for DR). |
+| `location_secondary` | Secondary region. If `var.location_secondary` is set (non-empty), this output equals that value; otherwise it is the paired/canonicalized region from `region_pair.json`. |
 
 Example referencing an output:
 ```hcl
@@ -219,7 +239,7 @@ This module wraps and extends the Microsoft `Azure/naming/azurerm` module, addin
 ```hcl
 module "naming_primary" {
     source       = "github.com/Build5Nines/terraform-azure-naming"
-    organization = "contoso"
+    organization = "b59"
     environment  = "prod"
     location     = "East US"
 }
