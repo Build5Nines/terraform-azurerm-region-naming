@@ -94,9 +94,9 @@ module "naming_secondary" {
     environment  = module.naming_primary.environment
     location     = module.naming_primary.location_secondary
 }
+```
 
 ---
-
 ## Customizing the Suffix Pattern
 
 The default suffix is equivalent to the pattern array:
