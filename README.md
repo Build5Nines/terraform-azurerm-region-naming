@@ -1,165 +1,270 @@
-# Build5Nines Azure Naming Terraform Module
+# Azure Region Naming (Build5Nines)
+
+> Consistent, location‑aware, environment‑aware Azure resource naming built on top of the official Microsoft [Azure/naming/azurerm](https://github.com/Azure/terraform-azurerm-naming) module.
 
 [![Unit Tests](https://github.com/Build5Nines/terraform-azurerm-region-naming/actions/workflows/unit-tests.yaml/badge.svg)](https://github.com/Build5Nines/terraform-azurerm-region-naming/actions/workflows/unit-tests.yaml)
 
-Naming Microsoft Azure resources provisioned across multiple Azure Regions and Environment deployments is easier and more consistent with this Terraform module. It helps you:
+This Terraform module standardizes Azure resource names by composing an opinionated suffix that includes:
 
-- Normalize Azure region inputs (both display names like "East US" and programmatic names like "eastus").
-- Generate a consistent location-aware name suffix (e.g., `{org}-{loc}-{env}` -> `contoso-eus-prod`).
-- Use a comprehensive, data-driven map of Azure regions to abbreviations and canonical short names.
-- Leverage the official Azure naming module while keeping your own opinionated suffix pattern.
+* Organization
+* Region abbreviation (canonical + overridable)
+* Environment
 
-This module is ideal for teams that want to set and adhere to a clear naming convention across Azure resources.
+It then passes that suffix to the upstream Azure naming module so you can access every supported Azure resource name through a single exported `prefix` object.
 
-## What this module does
+---
+## Highlights
+* Accepts either display region names (e.g. `East US`) or programmatic names (`eastus`).
+* Validates regions against an explicit allow list.
+* Data‑driven abbreviations via `data/region_abbr.json` (overrideable per region).
+* Region pairing / canonicalization via `data/region_pair.json` (exposed as `location_secondary`).
+* Flexible suffix pattern using placeholder tokens: `{org}`, `{loc}`, `{env}`.
+* Full access to all Azure resource naming outputs provided by `Azure/naming/azurerm`.
 
-- Validates `var.location` against the up-to-date list of public Azure regions (both display and short names).
-- Maps the region to a short, readable abbreviation (e.g., `eastus` -> `eus`) using a JSON lookup.
-- Maps any input region (display or short) to the canonical programmatic name (e.g., `East US` -> `eastus`) using a JSON lookup.
-- Builds a customizable location-aware suffix using `{org}`, `{loc}`, `{env}` placeholders.
-- Passes that suffix into the Azure official naming module to generate a consistent `prefix` you can use on all resources.
-
-## Why this helps with naming conventions
-
-Consistent naming improves discoverability, governance, and automation. This module:
-
-- Enforces consistency for region names and abbreviations.
-- Encodes your organization/environment/location into every resource name via a single, configurable pattern.
-- Keeps region data separate from code (JSON files), making updates simple and reviewable.
-- Provides sensible fallbacks so future regions don’t break your pipeline.
-
-## Usage
-
-Basic usage in your root module:
+---
+## Quick Start
 
 ```hcl
-module "azure_primary_region" {
+module "naming_primary" {
+    source        = "github.com/Build5Nines/terraform-azure-naming"
+    organization  = "contoso"
+    environment   = "prod"
+    location      = "East US"   # or "eastus"
+}
+
+resource "azurerm_resource_group" "main" {
+    name     = module.naming_primary.prefix.resource_group.name
+    location = module.naming_primary.location
+}
+```
+
+Resulting resource group name pattern (example):
+```
+contoso-eus-prod-rg
+```
+(`rg` is applied internally by the upstream module as the slug for a resource group.)
+
+---
+## Accessing Resource Names
+
+The `prefix` output is an entire instantiated module object from `Azure/naming/azurerm`, not just a string. Each supported Azure resource has a nested object with properties:
+
+| Property       | Description |
+|----------------|-------------|
+| `name`         | Generated name with your suffix applied. |
+| `name_unique`  | Same as `name` but with additional random characters for uniqueness (when supported). |
+| `slug`         | Short identifier segment for the resource type (e.g. `rg`, `sa`, `kv`). |
+| `min_length`   | Minimum allowed length. |
+| `max_length`   | Maximum allowed length. |
+| `scope`        | Uniqueness scope (`resourcegroup`, `global`, etc.). |
+| `dashes`       | Whether dashes are allowed. |
+| `regex`        | Validation regex (Terraform compatible). |
+
+Example usages:
+
+```hcl
+# Storage Account
+resource "azurerm_storage_account" "sa" {
+    name                     = module.naming_primary.prefix.storage_account.name
+    resource_group_name      = azurerm_resource_group.main.name
+    location                 = module.naming_primary.location
+    account_tier             = "Standard"
+    account_replication_type = "LRS"
+}
+
+# Unique variation (if collision risk)
+resource "azurerm_key_vault" "kv" {
+    name                = module.naming_primary.prefix.key_vault.name_unique
+    resource_group_name = azurerm_resource_group.main.name
+    location            = module.naming_primary.location
+    tenant_id           = data.azurerm_client_config.current.tenant_id
+    sku_name            = "standard"
+}
+```
+
+---
+## Secondary / Paired Region
+
+`location_secondary` exposes the paired (or canonicalized) region derived from `data/region_pair.json`. Use it to instantiate a second module instance for DR / HA scenarios:
+
+```hcl
+module "naming_secondary" {
+    source       = "github.com/Build5Nines/terraform-azure-naming"
+    organization = module.naming_primary.organization
+    environment  = module.naming_primary.environment
+    location     = module.naming_primary.location_secondary
+}
+```
+
+---
+## Customizing the Suffix Pattern
+
+The default suffix is equivalent to the pattern array:
+```hcl
+name_suffix = ["{org}", "{loc}", "{env}"]
+```
+You can rearrange or add static parts:
+
+```hcl
+module "naming_primary" {
+    source        = "github.com/Build5Nines/terraform-azure-naming"
+    organization  = "contoso"
+    environment   = "dev"
+    location      = "westeurope"
+    name_suffix   = ["{org}", "{env}", "{loc}"] # contoso-dev-weu
+}
+```
+
+Override region abbreviations:
+```hcl
+module "naming_primary" {
+    source        = "github.com/Build5Nines/terraform-azure-naming"
+    organization  = "contoso"
+    environment   = "prod"
+    location      = "East US"
+    location_abbreviations = {
+        eastus = "east"    # overrides default "eus"
+        westus = "west"
+    }
+}
+```
+
+---
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|----------|
+| `organization` | Organization / business unit segment. | string | "" | yes* |
+| `environment` | Environment segment (dev, test, prod, etc.). | string | "" | yes* |
+| `location` | Azure region (display or programmatic). | string | n/a | yes |
+| `name_suffix` | Ordered list of pattern tokens / literals forming the suffix. Tokens: `{org}`, `{loc}`, `{env}`. | list(string) | `["{org}", "{loc}", "{env}"]` | no |
+| `location_abbreviations` | Map of region -> abbreviation overrides (display or programmatic keys). | map(string) | `{}` | no |
+
+`organization` / `environment` default to empty strings; supplying them is strongly recommended for meaningful names.
+
+---
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| `base_suffix` | Final joined suffix string (e.g. `contoso-eus-prod`). |
+| `prefix` | The full upstream Azure naming module instance (access resource names via `prefix.<resource>.name`). |
+| `organization` | Echo of `var.organization`. |
+| `environment` | Echo of `var.environment`. |
+| `location` | Original provided location input. |
+| `location_abbreviation` | Resolved abbreviation (override > JSON > canonical short name). |
+| `location_secondary` | Paired/canonicalized region from `region_pair.json` (use for DR). |
+
+Example referencing an output:
+```hcl
+locals {
+    rg_name     = module.naming_primary.prefix.resource_group.name
+    storage_slug = module.naming_primary.prefix.storage_account.slug  # "st"
+}
+```
+
+---
+## Internals
+* Canonicalization: `location_canonical = lower(replace(var.location, " ", ""))`.
+* Abbreviations: Merge of JSON defaults + raw overrides + canonicalized override keys.
+* Region pairing: `region_pair.json` maps both display and programmatic names to a paired region.
+* Suffix expansion: Each element of `var.name_suffix` has tokens replaced; result list joined into a single string by the upstream module when composing names.
+* Upstream module call:
+    ```hcl
+    module "azure_name_prefix" {
+        source = "Azure/naming/azurerm"
+        suffix = local.name_suffix
+    }
+    ```
+
+---
+## Advanced Usage
+* Use `name_unique` for resources that require globally unique naming (storage accounts, key vaults, etc.).
+* Derive secondary region infra with `location_secondary`.
+* Compose additional naming layers by appending static literals in `name_suffix` (e.g. add a workload slug `{org}-{loc}-{env}-app`).
+* Inspect constraints before naming collisions: `module.naming_primary.prefix.storage_account.max_length`.
+
+---
+## Region Data Files
+| File | Purpose |
+|------|---------|
+| `data/region_abbr.json` | Default abbreviations keyed by canonical short region names. |
+| `data/region_pair.json` | Region pairing / canonicalization map (primary -> secondary). |
+
+Additions/changes are simple JSON edits; prefer PRs with minimal diff noise.
+
+---
+## Contributing
+1. Update JSON data files for new regions / pairings.
+2. Adjust validation list in `variables.tf` when Azure adds regions.
+3. Keep abbreviations concise (≤ 4–5 chars recommended).
+4. Add tests or examples when introducing new behavior.
+
+---
+## Notes & Recommendations
+* Keep to lowercase alphanumerics in overrides for broad resource compatibility.
+* Sovereign clouds (Gov, China) not yet included—future enhancement could introduce alternate data files.
+* Always review resource-specific max length constraints when expanding the suffix pattern.
+
+---
+## License
+Copyright (c) 2025 Build5Nine LLC. See `LICENSE` for details.
+
+---
+## Inspiration / Upstream
+This module wraps and extends the Microsoft `Azure/naming/azurerm` module, adding organizational & regional context consistency while reusing its comprehensive resource naming logic.
+
+---
+## Example: Multi‑Region Deployment
+```hcl
+module "naming_primary" {
     source       = "github.com/Build5Nines/terraform-azure-naming"
     organization = "contoso"
     environment  = "prod"
-    location     = "East US" # or "eastus"
+    location     = "East US"
 }
 
-# Use the generated prefix in resource names
-resource "azurerm_resource_group" "rg" {
-    name     = module.azure_primary_region.prefix.resource_group.name
-    location = module.azure_primary_region.location
-}
-```
-
-> This module uses the official [Azure naming module from Microsoft](https://github.com/Azure/terraform-azurerm-naming) (`source = "Azure/naming/azurerm"`) internally to compose the Azure resource names. The `prefix` output of this module (such as `module.azure_promary_region.prefix`) is an instance of the `Azure/naming/azurerm` module, so use that to get the Azure resource names prefixed with the Azure service abbreviations.
-
-Override the suffix pattern:
-
-```hcl
-module "azure_primary_region" {
-    source             = "github.com/Build5Nines/terraform-azure-naming"
-    organization       = "contoso"
-    environment        = "dev"
-    location           = "westeurope"
-    name_suffix_pattern = "{org}-{env}-{loc}" # e.g., contoso-dev-weu
-}
-```
-
-Use programmatic region names everywhere (also supported):
-
-```hcl
-module "azure_primary_region" {
+module "naming_secondary" {
     source       = "github.com/Build5Nines/terraform-azure-naming"
-    organization = "contoso"
-    environment  = "stage"
-    location     = "japaneast"
+    organization = module.naming_primary.organization
+    environment  = module.naming_primary.environment
+    location     = module.naming_primary.location_secondary
+}
+
+resource "azurerm_resource_group" "primary" {
+    name     = module.naming_primary.prefix.resource_group.name
+    location = module.naming_primary.location
+}
+
+resource "azurerm_resource_group" "secondary" {
+    name     = module.naming_secondary.prefix.resource_group.name
+    location = module.naming_secondary.location
 }
 ```
 
-Optional: define a secondary region using a second module instance that automatically uses the Azure Region Pair that matches the primary region:
+---
+## Troubleshooting
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Validation error for `location` | Region not in allow list | Use a supported region or update `variables.tf`. |
+| Unexpected abbreviation | Override not applied | Ensure key matches display or programmatic name; canonical form will also work. |
+| Missing paired region | Pair absent in `region_pair.json` | Add entry mapping both display & programmatic names. |
 
-```hcl
-module "azure_secondary_region" {
-    source       = "github.com/Build5Nines/terraform-azure-naming"
-    organizaton = module.azure_primary_region.organization
-    environment = module.azure_primary_region.environment
-    location    = module.azure_primary_region.secondary_location
-}
-```
+---
+## FAQ
+**Q: Why an array (`name_suffix`) instead of a single template string?**  
+Allows easier reordering and alignment with upstream module expectations (`suffix` accepts list).  
+**Q: Can I add a workload slug?**  
+Yes—append a literal: `["{org}", "{loc}", "{env}", "api"]`.  
+**Q: Is `prefix` really a string?**  
+No—it's the entire upstream naming module instance; treat it like `module.<name>.<resource>.name`.
 
-## Inputs
+---
+## Future Ideas
+* Optional inclusion of sovereign clouds via separate data file.
+* Automatic region list refresh script.
+* Toggle for including subscription / tenant contextual slugs.
 
-- `organization` (string, required): Your org or business unit identifier (e.g., `contoso`).
-- `environment` (string, required): Your environment identifier (e.g., `dev`, `test`, `prod`).
-- `location` (string, required): Azure region, either display name (e.g., `East US`) or programmatic short name (e.g., `eastus`).
-- `name_suffix_pattern` (string, optional, default `{org}-{loc}-{env}`): Pattern for the suffix. Placeholders:
-    - `{org}` -> `var.organization`
-    - `{env}` -> `var.environment`
-    - `{loc}` -> Region abbreviation (e.g., `eus`, `weu`, etc.)
-
-- `location_abbreviations` (map(string), optional, default `{}`): Optional map of region -> abbreviation overrides. Use this to provide custom or alternate abbreviations for regions. Keys may be the display name (e.g. `"East US"`) or the programmatic short name (e.g. `"eastus"`). Example: `{ "eastus" = "east", "westus" = "west" }`.
-
-## Outputs
-
-- `base_suffix` (string): The computed suffix using your pattern (e.g., `contoso-eus-prod`).
-- `prefix` (string): The naming prefix returned from the Azure naming module with your suffix applied.
-- `organization` (string): Passthrough of `var.organization`.
-- `environment` (string): Passthrough of `var.environment`.
-- `location` (string): Passthrough of `var.location`.
-- `location_abbreviation` (string): Abbreviated region code resolved from JSON (falls back to canonical short name when missing).
-- `location_secondary` (string): Canonical programmatic region name (e.g., `eastus`).
-
-## How abbreviations are chosen
-
-Abbreviations aim to be short and readable (e.g., `eastus` -> `eus`, `westeurope` -> `weu`). If a region is missing from `region_abbr.json`, the module falls back to the canonical short name (lowercased, spaces removed), so your pipeline won’t break if a new region appears before the data file is updated.
-
-Note: the module normalizes lookups for overrides and region inputs. You can provide override keys as either display names (e.g. `"East US"`) or programmatic short names (e.g. `"eastus"`) — the module will canonicalize keys (lowercase, no spaces) and prefer the canonical form when resolving abbreviations, so an override like `eastus = "east"` will apply even if you pass `var.location = "East US"`.
-
-## Data-driven region lookups
-
-Two JSON files back the region logic:
-
-- `data/region_abbr.json`: Map of region name -> short abbreviation. Contains both display and programmatic keys, e.g.
-- `data/region_abbr.json`: Map of canonical programmatic short name -> short abbreviation. Keys are the canonical short names (lowercased, no spaces), e.g.
-    - `"eastus": "eus"`
-
-- `data/region_pair.json`: Map of region name -> canonical programmatic name, e.g.
-    - `"East US": "eastus"`
-    - `"eastus": "eastus"`
-
-These are loaded in `main.tf` using `jsondecode(file(...))`. Because the data files live in the repo, updates are simple PRs with clear diffs.
-
-## How the pattern enforces convention
-
-By driving all resource names through a single suffix pattern that encodes org, environment, and location, you:
-
-- Ensure consistent, predictable naming across all modules and teams.
-- Make it easy to search and filter by environment and region in the Azure Portal or scripts.
-- Reduce drift by centralizing the logic in one place (this module + JSON data files).
-
-Example: override region abbreviations when you want different short codes than the defaults:
-
-```hcl
-module "azure_primary_region" {
-        source                  = "github.com/Build5Nines/terraform-azure-naming"
-        organization            = "contoso"
-        environment             = "prod"
-        location                = "East US"
-        location_abbreviations  = {
-            eastus = "east"
-            westus = "west"
-        }
-}
-
-# The resulting `{loc}` used in `name_suffix_pattern` for `East US` will be `east` (from the override)
-```
-
-## Notes
-
-- This module uses the official [Azure naming module from Microsoft](https://github.com/Azure/terraform-azurerm-naming) (`source = "Azure/naming/azurerm"`) internally to compose the Azure resource names.
-- Sovereign or restricted regions aren’t included by default. If you need Azure Government or China regions, we can add a separate JSON file or a toggle.
-
-## Contributing
-
-Issues and PRs are welcome. For region updates, please:
-
-- Update both `data/region_abbr.json` and `data/region_pair.json`.
-    - For `data/region_abbr.json` include canonical programmatic short-name keys (e.g. `eastus`).
-    - For `data/region_pair.json` include display and programmatic keys mapping to the canonical programmatic name.
-- Add or adjust the validation list in `variables.tf` if needed.
+---
+## Acknowledgments
+Built by [Chris Pietschmann](https://pietschsoft.com); inspired by Microsoft's Azure naming guidance and the `Azure/naming/azurerm` module.
