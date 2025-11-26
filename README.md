@@ -301,18 +301,8 @@ Additions/changes are simple JSON edits; prefer PRs with minimal diff noise.
 4. Add tests or examples when introducing new behavior.
 
 ---
-## Notes & Recommendations
-* Keep to lowercase alphanumerics in overrides for broad resource compatibility.
-* Sovereign clouds (Gov, China) not yet included—future enhancement could introduce alternate data files.
-* Always review resource-specific max length constraints when expanding the suffix pattern.
-
----
-## License
-Copyright (c) 2025 Build5Nine LLC. See `LICENSE` for details.
-
----
 ## Inspiration / Upstream
-This module wraps and extends the Microsoft `Azure/naming/azurerm` module, adding organizational & regional context consistency while reusing its comprehensive resource naming logic.
+This module wraps and extends the [Microsoft `Azure/naming/azurerm` module](https://github.com/Azure/terraform-azurerm-naming), adding organizational & regional context consistency while reusing its comprehensive resource naming logic.
 
 ---
 ## Example: Multi‑Region Deployment
@@ -360,12 +350,5 @@ Allows easier reordering and alignment with upstream module expectations (`suffi
 Yes—append a literal: `["{org}", "{loc}", "{env}", "api"]`.  
 
 ---
-## Future Ideas
-
-* Optional inclusion of sovereign clouds via separate data file.
-* Automatic region list refresh script.
-* Toggle for including subscription / tenant contextual slugs.
-
----
 ## Acknowledgments
-Built by [Chris Pietschmann](https://pietschsoft.com); inspired by Microsoft's Azure naming guidance and the `Azure/naming/azurerm` module.
+This project is created and maintained by [Chris Pietschmann](https://pietschsoft.com), Microsoft MVP (Azure and Dev Tools), HashiCorp Ambassador, and MCT.
