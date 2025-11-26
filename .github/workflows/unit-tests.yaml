@@ -1,6 +1,6 @@
 name: Unit Tests
 
-on: [push, pull_request, workflow_dispatch]
+on: [pull_request, workflow_dispatch]
 
 env:
   ACTIONS_RUNNER_DEBUG: 'true'
