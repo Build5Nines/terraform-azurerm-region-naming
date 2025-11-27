@@ -297,13 +297,6 @@ locals {
 Additions/changes are simple JSON edits; prefer PRs with minimal diff noise.
 
 ---
-## Contributing
-1. Update JSON data files for new regions / pairings.
-2. Adjust validation list in `variables.tf` when Azure adds regions.
-3. Keep abbreviations concise (≤ 4–5 chars recommended).
-4. Add tests or examples when introducing new behavior.
-
----
 ## Inspiration / Upstream
 This module wraps and extends the [Microsoft `Azure/naming/azurerm` module](https://github.com/Azure/terraform-azurerm-naming), adding organizational & regional context consistency while reusing its comprehensive resource naming logic.
 
@@ -347,10 +340,41 @@ resource "azurerm_resource_group" "secondary" {
 ## FAQ
 
 **Q: Why an array (`name_suffix`) instead of a single template string?**  
-Allows easier reordering and alignment with upstream module expectations (`suffix` accepts list).  
+Allows easier reordering and alignment with upstream module expectations (`suffix` accepts list).
+
+**Q: Why an array (`name_prefix`) instead of a single template string?**  
+Using an array for `name_prefix` allows for greater flexibility in ordering and customization. It aligns with the upstream module's expectations, as the `prefix` can accept a list of tokens, making it easier to manage and modify the naming patterns as needed.
 
 **Q: Can I add a workload slug?**  
-Yes—append a literal: `["{org}", "{loc}", "{env}", "api"]`.  
+Yes, you can add a literal to either the `name_prefix` or `name_suffix` as required for your naming convention: `["{org}", "{loc}", "{env}", "api"]`. 
+
+---
+## Contributing Guidelines
+
+We welcome contributions to this project! To ensure a smooth collaboration, please follow these guidelines:
+
+1. **Fork the Repository**: Start by forking the repository to your own GitHub account.
+
+2. **Create a Branch**: Create a new branch for your feature or bug fix. Use descriptive names for your branches (e.g., `feature/add-new-naming-pattern` or `bugfix/fix-typo`).
+
+3. **Make Your Changes**: Implement your changes in the new branch. Ensure that your code adheres to the project's coding standards and style.
+
+4. **Write Tests**: If applicable, write tests for your changes to ensure they work as expected and do not break existing functionality.
+
+5. **Update Documentation**: If your changes affect the usage or functionality of the module, please update the documentation accordingly.
+
+6. **Commit Your Changes**: Commit your changes with clear and concise commit messages that explain the purpose of the changes.
+
+7. **Push to Your Fork**: Push your changes to your forked repository.
+
+8. **Open a Pull Request**: Navigate to the original repository and open a pull request. Provide a detailed description of your changes and why they should be merged.
+
+9. **Engage in Review**: Be responsive to feedback and suggestions from the maintainers during the review process.
+
+Thank you for contributing to the project!
+
+---
+
 
 ---
 ## Acknowledgments
