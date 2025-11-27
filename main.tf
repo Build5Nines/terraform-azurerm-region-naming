@@ -64,6 +64,9 @@ locals {
 # https://github.com/Azure/terraform-azurerm-naming
 module "azure_naming" {
   source = "Azure/naming/azurerm"
+  
   suffix = local.name_suffix
   prefix = local.name_prefix
+
+  unique-include-numbers = var.unique_include_numbers
 }

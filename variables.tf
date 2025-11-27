@@ -181,3 +181,9 @@ EOT
   type        = map(string)
   default     = {}
 }
+
+variable "unique_include_numbers" {
+  description = "If you want to include numbers in the unique generation"
+  type        = bool
+  default     = true
+}
