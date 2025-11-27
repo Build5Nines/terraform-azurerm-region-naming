@@ -181,3 +181,21 @@ EOT
   type        = map(string)
   default     = {}
 }
+
+variable "unique_include_numbers" {
+  description = "If you want to include numbers in the unique generation"
+  type        = bool
+  default     = true
+}
+
+variable "unique_length" {
+  description = "The length of the uniqueness suffix to be added"
+  type        = number
+  default     = 4
+}
+
+variable "unique_seed" {
+  description = "Custom value for the random characters to be used"
+  type        = string
+  default     = ""
+}

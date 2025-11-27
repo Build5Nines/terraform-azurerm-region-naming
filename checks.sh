@@ -1,4 +1,0 @@
-
-terraform fmt
-
-terraform test

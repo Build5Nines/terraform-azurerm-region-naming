@@ -239,6 +239,9 @@ By default, the module will lookup the Microsoft Region Pair to return for the `
 | `name_suffix` | Ordered list of pattern tokens / literals forming the suffix. Tokens: `{org}`, `{loc}`, `{env}`. | list(string) | `["{org}", "{loc}", "{env}"]` | no |
 | `location_abbreviations` | Map of region -> abbreviation overrides (display or programmatic keys). | map(string) | `{}` | no |
 | `location_secondary` | Optional override for the secondary region. When set (non-empty), the `location_secondary` output will equal this value instead of the computed Microsoft regional pair. | string | "" | no |
+| `unique_include_numbers` | Include numbers in the unique suffix generation. | bool | `true` | no |
+| `unique_length` | Max length of the uniqueness suffix to be added | number | `4` | no |
+| `unique_seed` | Custom value for the random characters to be used | string | "" | no |
 
 `organization` / `environment` default to empty strings; supplying them is strongly recommended for meaningful names.
 
@@ -294,13 +297,6 @@ locals {
 Additions/changes are simple JSON edits; prefer PRs with minimal diff noise.
 
 ---
-## Contributing
-1. Update JSON data files for new regions / pairings.
-2. Adjust validation list in `variables.tf` when Azure adds regions.
-3. Keep abbreviations concise (≤ 4–5 chars recommended).
-4. Add tests or examples when introducing new behavior.
-
----
 ## Inspiration / Upstream
 This module wraps and extends the [Microsoft `Azure/naming/azurerm` module](https://github.com/Azure/terraform-azurerm-naming), adding organizational & regional context consistency while reusing its comprehensive resource naming logic.
 
@@ -344,10 +340,13 @@ resource "azurerm_resource_group" "secondary" {
 ## FAQ
 
 **Q: Why an array (`name_suffix`) instead of a single template string?**  
-Allows easier reordering and alignment with upstream module expectations (`suffix` accepts list).  
+Allows easier reordering and alignment with upstream module expectations (`suffix` accepts list).
+
+**Q: Why an array (`name_prefix`) instead of a single template string?**  
+Using an array for `name_prefix` allows for greater flexibility in ordering and customization. It aligns with the upstream module's expectations, as the `prefix` can accept a list of tokens, making it easier to manage and modify the naming patterns as needed.
 
 **Q: Can I add a workload slug?**  
-Yes—append a literal: `["{org}", "{loc}", "{env}", "api"]`.  
+Yes, you can add a literal to either the `name_prefix` or `name_suffix` as required for your naming convention: `["{org}", "{loc}", "{env}", "api"]`. 
 
 ---
 ## Acknowledgments
