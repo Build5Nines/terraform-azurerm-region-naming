@@ -187,3 +187,9 @@ variable "unique_include_numbers" {
   type        = bool
   default     = true
 }
+
+variable "unique_length" {
+  description = "The length of the uniqueness suffix to be added"
+  type        = number
+  default     = 4
+}

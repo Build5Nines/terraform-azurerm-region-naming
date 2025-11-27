@@ -240,6 +240,7 @@ By default, the module will lookup the Microsoft Region Pair to return for the `
 | `location_abbreviations` | Map of region -> abbreviation overrides (display or programmatic keys). | map(string) | `{}` | no |
 | `location_secondary` | Optional override for the secondary region. When set (non-empty), the `location_secondary` output will equal this value instead of the computed Microsoft regional pair. | string | "" | no |
 | `unique_include_numbers` | Include numbers in the unique suffix generation. | bool | `true` | no |
+| `unique_length` | Max length of the uniqueness suffix to be added | number | `4` | no |
 
 `organization` / `environment` default to empty strings; supplying them is strongly recommended for meaningful names.
 
