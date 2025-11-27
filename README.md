@@ -349,33 +349,5 @@ Using an array for `name_prefix` allows for greater flexibility in ordering and 
 Yes, you can add a literal to either the `name_prefix` or `name_suffix` as required for your naming convention: `["{org}", "{loc}", "{env}", "api"]`. 
 
 ---
-## Contributing Guidelines
-
-We welcome contributions to this project! To ensure a smooth collaboration, please follow these guidelines:
-
-1. **Fork the Repository**: Start by forking the repository to your own GitHub account.
-
-2. **Create a Branch**: Create a new branch for your feature or bug fix. Use descriptive names for your branches (e.g., `feature/add-new-naming-pattern` or `bugfix/fix-typo`).
-
-3. **Make Your Changes**: Implement your changes in the new branch. Ensure that your code adheres to the project's coding standards and style.
-
-4. **Write Tests**: If applicable, write tests for your changes to ensure they work as expected and do not break existing functionality.
-
-5. **Update Documentation**: If your changes affect the usage or functionality of the module, please update the documentation accordingly.
-
-6. **Commit Your Changes**: Commit your changes with clear and concise commit messages that explain the purpose of the changes.
-
-7. **Push to Your Fork**: Push your changes to your forked repository.
-
-8. **Open a Pull Request**: Navigate to the original repository and open a pull request. Provide a detailed description of your changes and why they should be merged.
-
-9. **Engage in Review**: Be responsive to feedback and suggestions from the maintainers during the review process.
-
-Thank you for contributing to the project!
-
----
-
-
----
 ## Acknowledgments
 This project is created and maintained by [Chris Pietschmann](https://pietschsoft.com), Microsoft MVP (Azure and Dev Tools), HashiCorp Ambassador, and MCT.
