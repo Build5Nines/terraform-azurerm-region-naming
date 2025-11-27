@@ -17,15 +17,6 @@ Stop wasting time manually crafting Azure resource names and eliminate naming in
 > Transform hours of naming decisions into seconds with a consistent, location‑aware, environment‑aware Microsoft Azure resource naming convention.
 
 ---
-## Highlights
-* **Eliminate naming inconsistencies** across your Azure infrastructure with a single, reusable module.
-* **Save time and reduce errors** by automating complex naming conventions instead of manually crafting names.
-* **Manage multi-region architectures more easily** with built-in region pairing and location-aware naming.
-* **Maintain compliance** with organizational standards through consistent naming patterns across all environments.
-* **Access 70+ Azure resource types** with proper abbreviations and constraints—all from one unified interface.
-* **Scale your infrastructure** confidently knowing every resource follows your defined naming convention.
-
----
 ## Quick Start
 
 ```hcl
@@ -76,9 +67,21 @@ Azure Storage Account = stb59eusprodfiles
 Azure SQL Server      = sql-b59-eus-prod-data
 ```
 
+---
+## Real-World Examples
+
 If you're looking for some more practical example usages of this module, check out the following:
 
 - [Multi-Region Deployment with Multiple Workloads in Single Terraform Project](https://github.com/Build5Nines/terraform-quickstart-templates/blob/main/microsoft-azure/workloads/multi-region-naming/main.tf): This is an example Terraform project demonstrating how to use the `Build5Nines/naming/azure` module to deploy a multi-region deployment across 2 Azure Regions (Primary and Secondary Region Pair) that includes Azure resources for multiple workloads within a single Terraform project.
+
+---
+## Additional Highlights
+* **Eliminate naming inconsistencies** across your Azure infrastructure with a single, reusable module.
+* **Save time and reduce errors** by automating complex naming conventions instead of manually crafting names.
+* **Manage multi-region architectures more easily** with built-in region pairing and location-aware naming.
+* **Maintain compliance** with organizational standards through consistent naming patterns across all environments.
+* **Access 70+ Azure resource types** with proper abbreviations and constraints—all from one unified interface.
+* **Scale your infrastructure** confidently knowing every resource follows your defined naming convention.
 
 ---
 ## Accessing Resource Names
