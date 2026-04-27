@@ -1,4 +1,4 @@
-# Azure Naming
+# Build5Nines Azure Resource Naming Module for HashiCorp Terraform
 
 [![Unit Tests](https://github.com/Build5Nines/terraform-azurerm-region-naming/actions/workflows/unit-tests.yaml/badge.svg)](https://github.com/Build5Nines/terraform-azurerm-region-naming/actions/workflows/unit-tests.yaml)
 ![azurerm: supported](https://img.shields.io/badge/azurerm-supported-blue)
