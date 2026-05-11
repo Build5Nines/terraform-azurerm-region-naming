@@ -6,7 +6,7 @@
 # https://github.com/Build5Nines/tf-azure-region-naming
 #
 # Author: Chris Pietschmann (https://pietschsoft.com)
-# Copyright (c) 2025 Build5Nine LLC
+# Copyright (c) 2025-2026 Build5Nine LLC
 # #######################################################
 
 output "base_suffix" {
@@ -41,10 +41,15 @@ output "location" {
 
 output "location_abbreviation" {
   description = "The abbreviation for the specified Azure region."
-  value       = try(local.location_abbr[var.location], try(local.location_abbr[local.location_canonical], local.location_canonical))
+  value       = module.azure_region.primary.short
 }
 
 output "location_secondary" {
   description = "The standardized Azure region name for the specified location."
-  value       = length(trimspace(var.location_secondary)) > 0 ? var.location_secondary : try(local.azure_region_pair[var.location], local.azure_region_pair[local.location_canonical])
+  value       = length(trimspace(var.location_secondary)) > 0 ? var.location_secondary : module.azure_region.secondary.name
+}
+
+output "region" {
+  description = "Full Azure region metadata from the azure-region module (primary, secondary, geography, compliance zone, and policy helpers)."
+  value       = module.azure_region
 }
