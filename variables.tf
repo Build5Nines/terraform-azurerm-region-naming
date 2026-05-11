@@ -6,7 +6,7 @@
 # https://github.com/Build5Nines/tf-azure-region-naming
 #
 # Author: Chris Pietschmann (https://pietschsoft.com)
-# Copyright (c) 2025 Build5Nine LLC
+# Copyright (c) 2025-2026 Build5Nine LLC
 # #######################################################
 
 variable "organization" {

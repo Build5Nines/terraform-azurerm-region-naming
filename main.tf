@@ -6,30 +6,27 @@
 # https://github.com/Build5Nines/tf-azure-region-naming
 #
 # Author: Chris Pietschmann (https://pietschsoft.com)
-# Copyright (c) 2025 Build5Nine LLC
+# Copyright (c) 2025-2026 Build5Nine LLC
 # #######################################################
+
+# Azure Region helper module — provides abbreviations, paired regions,
+# geography metadata, and policy-compliance helpers.
+module "azure_region" {
+  source  = "Build5Nines/region-map/azure"
+  version = "~> 1.0"
+
+  primary_region       = var.location
+  secondary_region     = var.location_secondary
+  strategy             = length(trimspace(var.location_secondary)) > 0 ? "custom" : "paired-region"
+  region_abbreviations = var.location_abbreviations
+}
 
 locals {
   # Canonical short region name derived from the provided location (e.g., "East US" -> "eastus")
   location_canonical = lower(replace(var.location, " ", ""))
 
-  # Load region abbreviations from external JSON file
-  default_location_abbr = jsondecode(file("${path.module}/data/region_abbr.json"))
-
-  # Allow consumers to override abbreviations via var.location_abbreviations.
-  # `merge(default, overrides)` lets the consumer-provided entries override the defaults.
-  # Normalize override keys so consumers may provide either display names ("East US") or
-  # short programmatic names ("eastus") and still have their overrides apply. We create
-  # a canonicalized map of overrides where keys are lowercased and spaces removed, then
-  # merge it last so these canonical overrides take final precedence.
-  location_abbr = merge(
-    local.default_location_abbr,
-    var.location_abbreviations,
-    { for k, v in var.location_abbreviations : lower(replace(k, " ", "")) => v }
-  )
-
-  # Canonical region short name lookup loaded from JSON
-  azure_region_pair = jsondecode(file("${path.module}/data/region_pair.json"))
+  # Region abbreviation map — sourced from the azure-region module (includes user overrides).
+  location_abbr = module.azure_region.region_abbreviations
 
   # Use explicit abbreviation when available; otherwise fall back to canonical short region name (e.g., eastus)
   # Build name suffix parts from the pattern array and then join into a string for consumers
